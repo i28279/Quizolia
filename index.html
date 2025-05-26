@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Quizolia</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+</head>
+<body class="bg-gray-100 p-6">
+
+  <div class="bg-white p-6 rounded shadow-md max-w-xl mx-auto">
+    <h1 class="text-3xl font-bold text-center mb-6">Quizolia</h1>
+
+    <label class="block mb-2 font-semibold">Book:</label>
+    <select id="bookSelect" onchange="updateChapters()" class="w-full p-2 border rounded mb-4">
+      <option disabled selected>Select Book</option>
+      <option value="chemistry">Chemistry</option>
+      <option value="physics">Physics</option>
+      <option value="biology">Biology</option>
+    </select>
+
+    <label class="block mb-2 font-semibold">Chapter:</label>
+    <select id="chapterSelect" onchange="updateTopics()" class="w-full p-2 border rounded mb-4">
+      <option disabled selected>Select Chapter</option>
+    </select>
+
+    <label class="block mb-2 font-semibold">Topic:</label>
+    <select id="topicSelect" class="w-full p-2 border rounded mb-4">
+      <option disabled selected>Select Topic</option>
+    </select>
+
+    <label class="block mb-2 font-semibold">Number of Questions:</label>
+    <input type="number" id="questionCount" value="5" class="w-full p-2 border rounded mb-4">
+
+    <label class="block mb-2 font-semibold">Options per Question:</label>
+    <input type="number" id="optionCount" value="4" class="w-full p-2 border rounded mb-4">
+
+    <button onclick="generateQuiz()" class="w-full bg-blue-600 text-white p-2 rounded font-semibold hover:bg-blue-700">Generate Quiz</button>
+  </div>
+
+  <div id="quizBox" class="mt-6 hidden bg-gray-50 p-4 rounded shadow space-y-4 max-w-xl mx-auto"></div>
+
+  <script>
+    const bookData = {
+      chemistry: {
+        "Atomic Structure": ["Atoms", "Isotopes", "Atomic Mass"],
+        "Chemical Bonding": ["Ionic", "Covalent", "Metallic"],
+        "Acids and Bases": ["pH Scale", "Neutralization", "Indicators"]
+      },
+      physics: {
+        "Mechanics": ["Motion", "Force", "Energy"],
+        "Thermodynamics": ["Heat", "Temperature", "Laws of Thermo"],
+        "Optics": ["Reflection", "Refraction", "Lenses"]
+      },
+      biology: {
+        "Cell Biology": ["Cell Structure", "Organelles", "Division"],
+        "Genetics": ["DNA", "Genes", "Inheritance"],
+        "Ecology": ["Ecosystem", "Pollution", "Conservation"]
+      }
+    };
+
+    function updateChapters() {
+      const book = document.getElementById("bookSelect").value;
+      const chapterSelect = document.getElementById("chapterSelect");
+      const topicSelect = document.getElementById("topicSelect");
+
+      chapterSelect.innerHTML = '<option disabled selected>Select Chapter</option>';
+      topicSelect.innerHTML = '<option disabled selected>Select Topic</option>';
+
+      const chapters = Object.keys(bookData[book]);
+      chapters.forEach(ch => {
+        const opt = document.createElement("option");
+        opt.value = ch;
+        opt.textContent = ch;
+        chapterSelect.appendChild(opt);
+      });
+    }
+
+    function updateTopics() {
+      const book = document.getElementById("bookSelect").value;
+      const chapter = document.getElementById("chapterSelect").value;
+      const topicSelect = document.getElementById("topicSelect");
+
+      topicSelect.innerHTML = '<option disabled selected>Select Topic</option>';
+
+      bookData[book][chapter].forEach(tp => {
+        const opt = document.createElement("option");
+        opt.value = tp;
+        opt.textContent = tp;
+        topicSelect.appendChild(opt);
+      });
+    }
+
+    async function generateQuiz() {
+      const book = document.getElementById("bookSelect").value;
+      const chapter = document.getElementById("chapterSelect").value;
+      const topic = document.getElementById("topicSelect").value;
+      const count = parseInt(document.getElementById("questionCount").value);
+      const options = parseInt(document.getElementById("optionCount").value);
+
+      const prompt = `Generate ${count} multiple choice questions (with ${options} options) on the topic "${topic}" under "${chapter}" in "${book}". Provide correct answer and short explanation for each. Format as JSON with fields: question, options, answer, explanation.`;
+
+      const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer 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"
+        },
+        body: JSON.stringify({
+          model: "gpt-3.5-turbo",
+          messages: [
+            { role: "user", content: prompt }
+          ]
+        })
+      });
+
+      const result = await response.json();
+      const text = result.choices[0].message.content;
+
+      let quizData = [];
+      try {
+        quizData = JSON.parse(text);
+      } catch {
+        quizData = JSON.parse(text.match(/.*/s)[0]); // Try to extract JSON array
+      }
+
+      const quizBox = document.getElementById("quizBox");
+      quizBox.innerHTML = "";
+      quizBox.classList.remove("hidden");
+
+      quizData.forEach((q, index) => {
+        const questionEl = document.createElement("div");
+        questionEl.classList.add("p-4", "border", "rounded", "bg-white");
+
+        let html = `<p class="font-semibold mb-2">${index + 1}. ${q.question}</p>`;
+        const labels = ["Ⓐ", "Ⓑ", "Ⓒ", "Ⓓ", "Ⓔ", "Ⓕ"];
+        q.options.forEach((opt, i) => {
+          html += `<p>${labels[i] || ""} ${opt}</p>`;
+        });
+
+        html += `<p class="mt-2 text-green-600"><strong>উত্তর:</strong> ${q.answer}</p>`;
+        html += `<p class="text-gray-600"><strong>ব্যাখ্যা:</strong> ${q.explanation}</p>`;
+
+        questionEl.innerHTML = html;
+        quizBox.appendChild(questionEl);
+      });
+    }
+  </script>
+</body>
+</html>
