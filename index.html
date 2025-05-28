@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Quizolia</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    select, input {
+      outline: 0;
+      transition: 0.3s;
+    }
+    select:hover, input:hover {
+      outline: 2px solid #5c8f24df;
+    }
+    .resultShowing > div {
+      width: 50%;
+      max-width: 300px;
+      text-align: center;
+    }
+    #t {
+      font-size:2rem; 
+      font-weight:700; 
+      white-space:nowrap;
+      border-right:2px solid; 
+      overflow:hidden;
+      animation:blink .7s step-end infinite;
+    }
+    center {padding-bottom: 20px;}
+    @keyframes blink {
+      50% { border-color:transparent }
+    }
+    
+    @media print {
+      #hideOn {display: none;}
+    }
+  </style>
+</head>
+<body class="bg-gray-100 p-6">
+
+  <div id="hideOn" class="bg-white p-6 rounded shadow-md max-w-xl mx-auto">
+    <center><span id="t"></span></center>
+
+    <label class="block mb-2 font-semibold">Book:</label>
+    <select id="bookSelect" onchange="updateChapters()" class="w-full p-2 border rounded mb-4">
+      <option disabled selected>Select Book</option>
+      <option value="physics">Physics</option>
+      <option value="chemistry">Chemistry</option>
+      <option value="math">Math</option>
+      <option value="biology">Biology</option>
+      <option value="bangla">Bangla</option>
+      <option value="english">English</option>
+      <option value="ict">ICT</option>
+      <option value="gk">GK</option>
+    </select>
+
+    <label class="block mb-2 font-semibold">Chapter:</label>
+    <select id="chapterSelect" onchange="updateTopics()" class="w-full p-2 border rounded mb-4">
+      <option disabled selected>Select Chapter</option>
+    </select>
+
+    <label class="block mb-2 font-semibold">Topic:</label>
+    <select id="topicSelect" class="w-full p-2 border rounded mb-4">
+      <option disabled selected>Select Topic</option>
+    </select>
+
+    <label class="block mb-2 font-semibold">Number of Questions:</label>
+    <input type="number" id="questionCount" value="5" class="w-full p-2 border rounded mb-4">
+
+    <label class="block mb-2 font-semibold">Options per Question:</label>
+    <input type="number" id="optionCount" value="4" class="w-full p-2 border rounded mb-4">
+
+    <button onclick="generateQuiz()" class="w-full bg-blue-600 text-white p-2 rounded font-semibold hover:bg-blue-700">Generate Quiz</button>
+  </div>
+  <div class="mt-6 bg-gray-50 p-4 rounded shadow space-y-4 max-w-xl mx-auto boxxx">
+    
+    <div id="quizBox"></div>
+    
+    <!-- Quiz Results Popup -->
+    <div id="resultsPopup" class="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center hidden">
+      <div class="bg-white p-6 rounded shadow-md w-96">
+        <h2 class="text-2xl font-semibold mb-4">Quiz Results</h2>
+        <div id="quizResults"></div>
+        <button onclick="closePopup()" class="mt-4 bg-gray-600 text-white p-2 rounded">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
